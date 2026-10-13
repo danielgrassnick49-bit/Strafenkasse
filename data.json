@@ -1,0 +1,11 @@
+{
+  "players": [
+    { "id": "p_1", "name": "Max Mustermann" },
+    { "id": "p_2", "name": "Thomas Müller" }
+  ],
+  "penalties": [],
+  "catalog": [
+    { "id": "c_1", "reason": "Zu spät zum Training", "amount": 5.00 },
+    { "id": "c_2", "reason": "Kasten Bier vergessen", "amount": 15.00 }
+  ]
+}
