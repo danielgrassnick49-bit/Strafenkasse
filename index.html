@@ -174,8 +174,8 @@
             <!-- TAB 4: Data / Backup Migration -->
             <div id="admin-tab-data" class="space-y-6 hidden">
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
-                    <h3 class="text-lg font-bold text-white">Daten in Cloud synchronisieren</h3>
-                    <p class="text-sm text-slate-400">Falls du auf diesem Gerät noch Daten hast, kannst du sie hier exportieren oder in die Cloud hochladen.</p>
+                    <h3 class="text-lg font-bold text-white">Daten / Backup</h3>
+                    <p class="text-sm text-slate-400">Hier kannst du ein Backup herunterladen oder manuell Daten in die Cloud einspielen.</p>
                     <div class="flex flex-wrap gap-3 pt-2">
                         <button onclick="exportLocalData()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">💾 Backup herunterladen</button>
                         <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer">
@@ -209,7 +209,7 @@
         Strafenkasse & Live-Cloud Sync
     </footer>
 
-    <!-- Script Application Logic with Cloud Sync -->
+    <!-- Script Application Logic with Direct Cloud Sync -->
     <script>
         const BIN_ID = "66f7220facd3cb34a8904719";
         const API_KEY = "$2a$10$wN3Ww2x0Sg1Xo7Z5q6Q3oe7vFh3Lq3b8k4zGj5y0Z7m8x9N5K2V4W";
@@ -236,21 +236,15 @@
                     }
                 }
             } catch(e) {
-                players = JSON.parse(localStorage.getItem('strafenkasse_players') || '[]');
-                penalties = JSON.parse(localStorage.getItem('strafenkasse_penalties') || '[]');
-                catalog = JSON.parse(localStorage.getItem('strafenkasse_catalog') || '[]');
+                console.log("Fehler beim Laden aus der Cloud");
             }
             refreshUI();
         }
 
         async function saveCloudData() {
             const dataToSave = { players, penalties, catalog };
-            localStorage.setItem('strafenkasse_players', JSON.stringify(players));
-            localStorage.setItem('strafenkasse_penalties', JSON.stringify(penalties));
-            localStorage.setItem('strafenkasse_catalog', JSON.stringify(catalog));
-
             try {
-                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -258,8 +252,11 @@
                     },
                     body: JSON.stringify(dataToSave)
                 });
+                if(response.ok) {
+                    document.getElementById('sync-status').classList.remove('hidden');
+                }
             } catch(e) {
-                console.log("Fehler beim Cloud-Speichern");
+                alert("Fehler: Konnte Daten nicht in der Cloud speichern!");
             }
             refreshUI();
         }
@@ -293,7 +290,7 @@
             fileReader.readAsText(event.target.files[0]);
         }
 
-        function initApp() {
+        async function initApp() {
             const today = new Date().toISOString().split('T')[0];
             const dateInput = document.getElementById('admin-penalty-date');
             if(dateInput) dateInput.value = today;
@@ -302,9 +299,9 @@
             if (urlParams.get('admin') === 'true') {
                 openAdminLogin();
             }
-            loadCloudData().then(() => {
-                updateViewMode();
-            });
+            
+            await loadCloudData();
+            updateViewMode();
         }
 
         function refreshUI() {
